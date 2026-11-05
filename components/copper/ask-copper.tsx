@@ -35,6 +35,7 @@ import {
   TOOL_LABELS,
 } from "@/lib/copper/assistant/progress";
 import { formatUsd, getPlans, getProducts } from "@/lib/copper/catalog";
+import { splitCitations } from "@/lib/copper/rag/citations";
 import { cn } from "@/lib/utils";
 
 const STARTERS = [
@@ -384,7 +385,22 @@ function Answer({
             </div>
           )}
           <p className="text-sm whitespace-pre-wrap">
-            {reply}
+            {splitCitations(reply).map((part, i) =>
+              part.type === "citation" ? (
+                <a
+                  key={i}
+                  href={part.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  data-testid="citation"
+                  className="text-primary underline underline-offset-2"
+                >
+                  {part.text}
+                </a>
+              ) : (
+                part.text
+              ),
+            )}
             {working && (
               <span className="bg-primary ml-0.5 inline-block h-4 w-0.5 animate-pulse align-middle" />
             )}

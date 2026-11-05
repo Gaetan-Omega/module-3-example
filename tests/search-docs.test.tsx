@@ -283,3 +283,67 @@ describe("search_docs: the tool card", () => {
     expect(items[0].textContent).toContain("Annual plans get a full refund");
   });
 });
+
+describe("citations in Copper's answers", () => {
+  it("tells Copper to answer only from search_docs, cite every sentence like [Copper Home User Guide, p. 9], and say it couldn't find it otherwise", async () => {
+    const { COPPER_INSTRUCTIONS } =
+      await import("@/lib/copper/assistant/instructions");
+    expect(COPPER_INSTRUCTIONS).toMatch(/ONLY from the passages/);
+    expect(COPPER_INSTRUCTIONS).toMatch(/Every sentence/);
+    expect(COPPER_INSTRUCTIONS).toContain("[Copper Home User Guide, p. 9]");
+    expect(COPPER_INSTRUCTIONS).toContain(
+      "I couldn't find that in our support docs.",
+    );
+    expect(COPPER_INSTRUCTIONS).toMatch(/Copper Crew/);
+    expect(COPPER_INSTRUCTIONS).toMatch(/never guess/i);
+  });
+
+  it("turns each [Title, p. N] into a link to that page, and leaves unknown sources as plain text", async () => {
+    const { splitCitations } = await import("@/lib/copper/rag/citations");
+    expect(
+      splitCitations(
+        "Unplug it for 30 seconds. [Copper Home User Guide, p. 9] Ask us. [Made Up Doc, p. 2]",
+      ),
+    ).toEqual([
+      { type: "text", text: "Unplug it for 30 seconds. " },
+      {
+        type: "citation",
+        text: "[Copper Home User Guide, p. 9]",
+        url: "/docs/copper-home-user-guide.pdf#page=9",
+      },
+      { type: "text", text: " Ask us. " },
+      { type: "text", text: "[Made Up Doc, p. 2]" },
+    ]);
+    expect(splitCitations("No citations here.")).toEqual([
+      { type: "text", text: "No citations here." },
+    ]);
+  });
+
+  it("shows citations in the reply as links that open the PDF at that page", async () => {
+    const done = createLive<Progress>();
+    done.done({
+      status: "done",
+      reply:
+        "Annual plans get a full refund if you cancel in time. [Copper Plus FAQ, p. 5]",
+      steps: [],
+    });
+    vi.doMock("@/lib/copper/assistant/ask", () => ({
+      askCopper: vi.fn().mockResolvedValue({ progress: done.live }),
+    }));
+    vi.resetModules();
+    const { default: Home } = await import("@/app/page");
+    const page = Home as unknown as () => Promise<React.ReactNode>;
+    render(<>{await page()}</>);
+    fireEvent.click(screen.getByTestId("ask-copper-launcher"));
+    const chat = within(await screen.findByTestId("ask-copper"));
+    fireEvent.change(chat.getByRole("textbox"), {
+      target: { value: "annual refund" },
+    });
+    fireEvent.click(chat.getByRole("button", { name: /send/i }));
+    const link = await chat.findByRole("link", {
+      name: "[Copper Plus FAQ, p. 5]",
+    });
+    expect(link).toHaveAttribute("href", "/docs/copper-plus-faq.pdf#page=5");
+    expect(link).toHaveAttribute("target", "_blank");
+  });
+});

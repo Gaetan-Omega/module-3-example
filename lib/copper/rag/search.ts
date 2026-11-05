@@ -1,7 +1,7 @@
 // Document search: embeds a question and finds the passages whose embeddings
 // are closest to it. Used by Ask Copper's search_docs tool.
 import { callEmbedMany, isAiConfigured } from "@/lib/ai/call";
-import { DOCUMENTS } from "@/lib/copper/documents";
+import { pageUrl } from "@/lib/copper/rag/citations";
 import { getPassages } from "@/lib/copper/rag/passages";
 
 export type DocSearchResult = {
@@ -22,12 +22,6 @@ export type DocSearch =
 
 /** How many passages come back. */
 export const TOP_K = 5;
-
-/** A link that opens the PDF at one page (browsers read "#page=N"). */
-export function pageUrl(documentId: string, page: number): string {
-  const doc = DOCUMENTS.find((d) => d.id === documentId);
-  return `${doc?.file ?? "/docs"}#page=${page}`;
-}
 
 // Both vectors have length 1, so their dot product is their cosine similarity.
 function similarity(a: readonly number[], b: readonly number[]): number {
