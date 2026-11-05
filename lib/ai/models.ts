@@ -12,6 +12,11 @@ export const MODELS = [
     label: "Gemini 3 Flash (newer, thinks out loud less often)",
     googleId: "gemini-3-flash-preview",
   },
+  {
+    id: "google/gemini-3.5-flash",
+    label: "Gemini 3.5 Flash (newest, steadiest on a free key)",
+    googleId: "gemini-3.5-flash",
+  },
 ] as const;
 
 /**
@@ -29,10 +34,11 @@ export type ModelId = (typeof MODELS)[number]["id"];
 
 /**
  * The model used when a call doesn't name one. Google no longer lets new API
- * keys use 2.5 Flash, so the default is 3 Flash. (2.5 Flash wrote a thinking
- * summary for every question; 3 Flash does so less often.)
+ * keys use 2.5 Flash, and 3 Flash (a preview) hits free-key rate limits (429)
+ * after a few questions, so the default is 3.5 Flash. (2.5 Flash wrote a
+ * thinking summary for every question; the newer ones do so less often.)
  */
-export const DEFAULT_MODEL: ModelId = "google/gemini-3-flash";
+export const DEFAULT_MODEL: ModelId = "google/gemini-3.5-flash";
 
 /** AI_MODEL if it names an approved model, otherwise the default. */
 export function defaultModel(): ModelId {
