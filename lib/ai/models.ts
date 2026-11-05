@@ -25,7 +25,7 @@ export const EMBEDDING_MODEL = {
   dimensions: 768,
 } as const;
 
-export type ModelId =(typeof MODELS)[number]["id"];
+export type ModelId = (typeof MODELS)[number]["id"];
 
 /**
  * The model used when a call doesn't name one. Google no longer lets new API

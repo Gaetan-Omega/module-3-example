@@ -96,3 +96,20 @@ each step. Module 3 teaches it to answer from the customer documents.
 | Instructions | `lib/copper/assistant/instructions.ts` | `COPPER_INSTRUCTIONS`. Copper says it can't help yet with warranty, setup, troubleshooting or privacy |
 | Data | `lib/copper/inventory.ts`, `lib/copper/documents.ts` | Stock from `lib/copper/data/inventory.json`; `DOCUMENTS`: the four customer documents and their PDF paths under `public/docs/`. The PDFs are added in class |
 | AI calls | `{ module: 2, feature: "ask-copper" }` | One streamed call per question |
+
+## Module 3: Document search (RAG)
+
+Ask Copper can answer setup, troubleshooting, warranty and policy questions
+from the customer PDFs in `public/docs/`.
+
+| Piece | Where | What it does |
+|---|---|---|
+| Ingest | `npm run ingest:docs` (`scripts/ingest-docs.mjs`) | Reads every PDF, splits each page into passages of up to 4 sentences, starts each passage's text with its document title, embeds them with `gemini-embedding-001` (768 numbers each) and writes `lib/copper/data/document-passages.json`. Re-run it whenever a PDF changes |
+| Embeddings | `callEmbedMany` in `lib/ai/call.ts` | Same single door as the other model calls, logged to `[ai_calls]` |
+| Passages in memory | `lib/copper/rag/passages.ts` | Imports the JSON, so it loads once when the server starts |
+| Search | `lib/copper/rag/search.ts` | Embeds the question, ranks passages by cosine similarity and returns the closest 5 with title, page and a `/docs/<file>.pdf#page=N` link |
+| Tool | `search_docs` in `lib/copper/assistant/tools.ts` | Ask Copper calls it for document questions; the tool card lists each passage with its link |
+
+Data flow: question → `search_docs` → embed the question (`RETRIEVAL_QUERY`) →
+compare with every stored passage vector → 5 closest → Copper answers from
+them and names the document and page.

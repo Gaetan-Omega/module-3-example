@@ -29,7 +29,10 @@ function passagesFor(pageText) {
   };
   for (const sentence of sentences) {
     const length = current.join(" ").length + sentence.length;
-    if (current.length >= SENTENCES_PER_PASSAGE || (current.length && length > MAX_CHARS)) {
+    if (
+      current.length >= SENTENCES_PER_PASSAGE ||
+      (current.length && length > MAX_CHARS)
+    ) {
       flush();
     }
     current.push(sentence);
@@ -65,8 +68,11 @@ for (const doc of DOCUMENTS) {
 }
 
 if (process.argv.includes("--dry")) {
-  console.log(`Dry run: ${passages.length} passages (nothing embedded or saved)`);
-  for (const [title, n] of Object.entries(counts)) console.log(`  ${title}: ${n}`);
+  console.log(
+    `Dry run: ${passages.length} passages (nothing embedded or saved)`,
+  );
+  for (const [title, n] of Object.entries(counts))
+    console.log(`  ${title}: ${n}`);
   process.exit(0);
 }
 
@@ -86,4 +92,5 @@ mkdirSync("lib/copper/data", { recursive: true });
 writeFileSync(OUT, JSON.stringify(file) + "\n");
 
 console.log(`Saved ${passages.length} passages to ${OUT}`);
-for (const [title, n] of Object.entries(counts)) console.log(`  ${title}: ${n}`);
+for (const [title, n] of Object.entries(counts))
+  console.log(`  ${title}: ${n}`);

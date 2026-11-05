@@ -9,6 +9,7 @@ import {
   ArrowRightIcon,
   ArrowUpIcon,
   BrainIcon,
+  FileTextIcon,
   MessageCircleIcon,
   TriangleAlertIcon,
   WrenchIcon,
@@ -583,6 +584,30 @@ function ToolOutput({ name, output }: { name: string; output: any }) {
             </div>
           ))}
       </div>
+    );
+  if (name === "search_docs" && output?.status === "unavailable")
+    return <p className="text-xs">{output.message}</p>;
+  if (name === "search_docs" && output?.results)
+    return (
+      <ol className="space-y-3 text-xs">
+        {output.results.length === 0 && <li>No passages found.</li>}
+        {output.results.map((r: any, i: number) => (
+          <li key={`${r.url}-${i}`} data-testid="doc-passage">
+            <a
+              href={r.url}
+              target="_blank"
+              rel="noreferrer"
+              className="text-primary flex items-center gap-1 font-semibold underline-offset-2 hover:underline"
+            >
+              <FileTextIcon className="size-3 shrink-0" />
+              {r.title}, page {r.page}
+            </a>
+            <p className="text-muted-foreground mt-0.5 line-clamp-3">
+              {r.text}
+            </p>
+          </li>
+        ))}
+      </ol>
     );
   if (name === "check_availability" && output?.status) {
     if (output.status === "unavailable")
